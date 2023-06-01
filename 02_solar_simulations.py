@@ -1,4 +1,9 @@
+from multiprocessing import Process
 import subprocess
+import io
+# import numpy as np
+
+NCORES = 6
 
 def run_uvspec(uvspec_path,
                input_path,
@@ -9,9 +14,16 @@ def run_uvspec(uvspec_path,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE,
                              encoding='ascii')
-    
+
+    # arr = np.genfromtxt(io.StringIO(process.stdout))[:, [0,2]]
+
+    # np.savetxt(output_path,
+    #            arr,
+    #            delimiter=' ',
+    #            fmt=['%d'] + ['%.18e'] * (arr.shape[1] - 1))
+
     with open (output_path, 'w') as outfile:
-        outfile.write(process.stdout)
+         outfile.write(process.stdout)
 
 def make_input_file(
         inp_file_path,
@@ -45,24 +57,30 @@ def make_input_file(
         f.write(f"quiet")
 
 # Lunar irradiance
-sza_vec = list(range(0,181))
-day_of_year = list(range(1,366))
+sza_vec = list(range(0,132,1))
 
-for pp in phase:
-
-    mc_photons = 50000
-
-    if pp > 80:
-        mc_photons = 100000
-
-    if pp > 100:
-        mc_photons = 200000
-
-    for dd in day_of_year:
-
-        print(f"Day: {dd}, Phase: {pp}, LZA: {zz}")
+def run_solar_simulation(day_list):
+        
+    for dd in day_list:
+    
+        print(f"Day: {dd}")
 
         for zz in sza_vec:
+		
+			mc_photons = 100000
+
+			if zz > 80:
+				mc_photons = 200000
+
+			if zz > 90:
+				mc_photons = 500000
+				
+			if zz > 100:
+				mc_photons = 1000000
+			
+			if zz > 110:
+				mc_photons = 1500000
+
 
             make_input_file(
                 inp_file_path='/home/seanr/libRadtran-2.0.4/analysis/sza_parameters.inp',
@@ -82,25 +100,23 @@ for pp in phase:
             run_uvspec(
                 uvspec_path='/home/seanr/libRadtran-2.0.4/bin/uvspec',
                 input_path='/home/seanr/libRadtran-2.0.4/analysis/sza_parameters.inp',
-                output_path=f"/home/seanr/libRadtran-2.0.4/output/sun/sun_{dd}_{zz}_{pp}.out"
-            )
+                output_path=f"/home/seanr/libRadtran-2.0.4/output/sun/sun_{dd}_{zz}.out"
+                )
+
 
 if __name__ == '__main__':
-    phase = list(range(0,181))
+    day_of_year = list(range(1,366, 1))
     processes = []
 
-    num_processes = 6  # Specify the number of processes to use
+    num_processes = NCORES  # Specify the number of processes to use
 
     # Split the input array into equal-sized chunks for each process
-    chunk_size = len(input_array) // num_processes
+    chunk_size = len(day_of_year) // num_processes
     for i in range(num_processes):
         start_index = i * chunk_size
-        end_index = (i + 1) * chunk_size if i < num_processes - 1 else len(input_array)
-        chunk = input_array[start_index:end_index]
+        end_index = (i + 1) * chunk_size if i < num_processes - 1 else len(day_of_year)
+        chunk = day_of_year[start_index:end_index]
 
-        p = Process(target=bubble_sort, args=(chunk,))
+        p = Process(target=run_solar_simulation, args=(chunk,))
         processes.append(p)
         p.start()
-
-    for p in processes:
-        p.join()
