@@ -66,20 +66,19 @@ def run_solar_simulation(day_list):
         print(f"Day: {dd}")
 
         for zz in sza_vec:
-		
-			mc_photons = 100000
-
-			if zz > 80:
-				mc_photons = 200000
-
-			if zz > 90:
-				mc_photons = 500000
-				
-			if zz > 100:
-				mc_photons = 1000000
-			
-			if zz > 110:
-				mc_photons = 1500000
+            mc_photons = 100000
+            
+            if zz > 80:
+                mc_photons = 200000
+            
+            if zz > 90:
+                mc_photons = 500000
+            
+            if zz > 100:
+                mc_photons = 1000000
+            
+            if zz > 110:
+                mc_photons = 1500000
 
 
             make_input_file(
