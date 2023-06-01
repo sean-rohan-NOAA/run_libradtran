@@ -1,0 +1,9 @@
+inst/doc
+*.Rproj
+*.RData
+*.Rproj.user
+*.Rhistory
+.Rbuildignore
+.Rproj.user
+
+/output/
